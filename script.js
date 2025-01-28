@@ -3,7 +3,10 @@ const CSContainer = document.getElementById("cs-container")
 const grades = {
     "Prelim": {
         "Class Standing": {
-            "Grade": 0
+            "Grade": 0,
+            "CS-1": {
+
+            }
         },
         "Exam": 0,
         "Grade": 0
@@ -51,8 +54,8 @@ function updateGrade() {
                 }
             })
 
-            grades[currentPeriod]["Class Standing"][nodeName]["Percentage"] = parseFloat(node.firstChild.childNodes[2].value)
-            grades[currentPeriod]["Class Standing"][nodeName]["Grade"] = grade / (Object.keys(grades[currentPeriod]["Class Standing"][nodeName]).length - 2)
+            grades[currentPeriod]["Class Standing"][nodeName]["Percentage"] = round(parseFloat(node.firstChild.childNodes[2].value))
+            grades[currentPeriod]["Class Standing"][nodeName]["Grade"] = round(grade / (Object.keys(grades[currentPeriod]["Class Standing"][nodeName]).length - 2))
             node.firstChild.lastChild.value = grades[currentPeriod]["Class Standing"][nodeName]["Grade"]
             total_cs_percentage += parseFloat(node.firstChild.childNodes[2].value) || 0
         }
@@ -64,14 +67,22 @@ function updateGrade() {
                 grades[currentPeriod]["Class Standing"]["Grade"] += grades[currentPeriod]["Class Standing"][factor]["Grade"] * grades[currentPeriod]["Class Standing"][factor]["Percentage"] / 100
             }
         })
+        grades[currentPeriod]["Class Standing"]["Grade"] = round(grades[currentPeriod]["Class Standing"]["Grade"])
         classStandingGrade.value = grades[currentPeriod]["Class Standing"]["Grade"]
 
-        let CS = parseFloat(classStandingGrade.value) || 0
-        let ME = parseFloat(majorExamGrade.value) || 0
-        gradeText.innerText = "" + (CS/2 + ME/2)
+        let CS = round(parseFloat(classStandingGrade.value)) || 0
+        let ME = round(parseFloat(majorExamGrade.value)) || 0
     
         grades[currentPeriod]["Exam"] = ME
-        grades[currentPeriod]["Grade"] = (currentPeriod === "Prelim") ? (CS/2 + ME/2) : 0
+
+        if (currentPeriod === "Prelim")
+            grades[currentPeriod]["Grade"] = round(CS/2 + ME/2)
+        else if (currentPeriod === "Midterm")
+            grades[currentPeriod]["Grade"] = round(1/3*(grades["Prelim"]["Grade"]) + 2/3*(CS/2 + ME/2))
+        else
+            grades[currentPeriod]["Grade"] = round(1/3*(grades["Midterm"]["Grade"]) + 2/3*(CS/2 + ME/2))
+
+        gradeText.innerText = grades[currentPeriod]["Grade"]
     }
 }
 
@@ -92,6 +103,8 @@ function loadPeriod() {
             spacer2.className = "spacer"
             const spacer3 = document.createElement('div')
             spacer3.className = "spacer"
+            const spacer4 = document.createElement('div')
+            spacer4.className = "spacer"
         
             const categoryName = document.createElement('input')
             categoryName.className = "category-name"
@@ -111,10 +124,15 @@ function loadPeriod() {
             categoryGrade.id = "category-grade"
             categoryGrade.placeholder = "*Grade*"
         
-            const subCategoryButton = document.createElement('h3')
-            subCategoryButton.innerText = "."
+            const subCategoryButton = document.createElement('img')
             subCategoryButton.className = "add-sub-category-button"
             subCategoryButton.addEventListener('click', addSubCategory)
+            subCategoryButton.src = "add_sub_category_button.png"
+
+            const deleteButton = document.createElement('img')
+            deleteButton.className = "delete-button"
+            deleteButton.addEventListener('click', deleteCategory)
+            deleteButton.src = "delete_button.png"
         
             headerDiv.appendChild(categoryName)
             headerDiv.appendChild(spacer1)
@@ -122,6 +140,8 @@ function loadPeriod() {
             headerDiv.appendChild(spacer2)
             headerDiv.appendChild(subCategoryButton)
             headerDiv.appendChild(spacer3)
+            headerDiv.appendChild(deleteButton)
+            headerDiv.appendChild(spacer4)
             headerDiv.appendChild(categoryGrade)
         
             factorDiv.appendChild(headerDiv)
@@ -134,6 +154,8 @@ function loadPeriod() {
     
                     const spacer1 = document.createElement('div')
                     spacer1.className = "spacer"
+                    const spacer2 = document.createElement('div')
+                    spacer2.className = "spacer"
     
                     const subCategoryName = document.createElement('input')
                     subCategoryName.value = factor_node
@@ -145,9 +167,16 @@ function loadPeriod() {
                     categoryGrade.type = "text"
                     categoryGrade.id = "sub-category-grade"
                     categoryGrade.placeholder = "*Grade*"
-    
+
+                    const deleteButton = document.createElement('img')
+                    deleteButton.className = "delete-button"
+                    deleteButton.addEventListener('click', deleteSubCategory)
+                    deleteButton.src = "delete_button.png"
+
                     headerDiv.appendChild(subCategoryName)
                     headerDiv.appendChild(spacer1)
+                    headerDiv.appendChild(deleteButton)
+                    headerDiv.appendChild(spacer2)
                     headerDiv.appendChild(categoryGrade)
     
                     factorDiv.appendChild(headerDiv)
@@ -158,6 +187,7 @@ function loadPeriod() {
             CSContainer.appendChild(factorDiv)
         }
     })
+    majorExamGrade.value = grades[currentPeriod]["Exam"] || 0
 }
 
 function gradePeriod(clickedNode) {    
@@ -167,6 +197,7 @@ function gradePeriod(clickedNode) {
     grades[currentPeriod]["innerHTML"] = CSContainer.innerHTML
     currentPeriod = clickedNode.innerHTML
     CSContainer.innerHTML = ''
+    majorExamGrade.value = 0
     loadPeriod()
     console.log(grades)
 }
@@ -184,6 +215,8 @@ function addCategory() {
     spacer2.className = "spacer"
     const spacer3 = document.createElement('div')
     spacer3.className = "spacer"
+    const spacer4 = document.createElement('div')
+    spacer4.className = "spacer"
 
     const categoryName = document.createElement('input')
     categoryName.className = "category-name"
@@ -202,10 +235,15 @@ function addCategory() {
     categoryGrade.id = "category-grade"
     categoryGrade.placeholder = "*Grade*"
 
-    const subCategoryButton = document.createElement('h3')
-    subCategoryButton.innerText = "."
+    const subCategoryButton = document.createElement('img')
     subCategoryButton.className = "add-sub-category-button"
     subCategoryButton.addEventListener('click', addSubCategory)
+    subCategoryButton.src = "add_sub_category_button.png"
+
+    const deleteButton = document.createElement('img')
+    deleteButton.className = "delete-button"
+    deleteButton.addEventListener('click', deleteCategory)
+    deleteButton.src = "delete_button.png"
 
     headerDiv.appendChild(categoryName)
     headerDiv.appendChild(spacer1)
@@ -213,9 +251,13 @@ function addCategory() {
     headerDiv.appendChild(spacer2)
     headerDiv.appendChild(subCategoryButton)
     headerDiv.appendChild(spacer3)
+    headerDiv.appendChild(deleteButton)
+    headerDiv.appendChild(spacer4)
     headerDiv.appendChild(categoryGrade)
 
-    grades[currentPeriod]["Class Standing"]["CS-" + CSContainer.childNodes.length] = {}
+    grades["Prelim"]["Class Standing"]["CS-" + CSContainer.childNodes.length] = {}
+    grades["Midterm"]["Class Standing"]["CS-" + CSContainer.childNodes.length] = {}
+    grades["Final"]["Class Standing"]["CS-" + CSContainer.childNodes.length] = {}
 
     factorDiv.appendChild(headerDiv)
     CSContainer.appendChild(factorDiv)
@@ -230,13 +272,17 @@ function addSubCategory(node) {
         // return
     }
 
-    grades[currentPeriod]["Class Standing"][parentNode.firstChild.firstChild.value]["Percentage"] = parseFloat(percentage)
+    grades["Prelim"]["Class Standing"][parentNode.firstChild.firstChild.value]["Percentage"] = parseFloat(percentage)
+    grades["Midterm"]["Class Standing"][parentNode.firstChild.firstChild.value]["Percentage"] = parseFloat(percentage)
+    grades["Final"]["Class Standing"][parentNode.firstChild.firstChild.value]["Percentage"] = parseFloat(percentage)
 
     const headerDiv = document.createElement('div')
     headerDiv.className = "cs-factor-container"
 
     const spacer1 = document.createElement('div')
     spacer1.className = "spacer"
+    const spacer2 = document.createElement('div')
+    spacer2.className = "spacer"
 
     const subCategoryName = document.createElement('input')
     subCategoryName.value = parentNode.firstChild.firstChild.value + "#" + parentNode.childNodes.length
@@ -248,9 +294,29 @@ function addSubCategory(node) {
     categoryGrade.id = "sub-category-grade"
     categoryGrade.placeholder = "*Grade*"
 
+    const deleteButton = document.createElement('img')
+    deleteButton.className = "delete-button"
+    deleteButton.addEventListener('click', deleteSubCategory)
+    deleteButton.src = "delete_button.png"
+
     headerDiv.appendChild(subCategoryName)
     headerDiv.appendChild(spacer1)
+    headerDiv.appendChild(deleteButton)
+    headerDiv.appendChild(spacer2)
     headerDiv.appendChild(categoryGrade)
 
     parentNode.appendChild(headerDiv)
+}
+
+function deleteCategory(node) {
+    delete grades[currentPeriod]["Class Standing"][node.srcElement.parentNode.firstChild.value]
+    CSContainer.removeChild(node.srcElement.parentNode.parentNode)
+}
+
+function deleteSubCategory(node) {
+    node.srcElement.parentNode.parentNode.removeChild(node.srcElement.parentNode)
+}
+
+function round(num) {
+    return Math.round((num + Number.EPSILON) * 100)/100
 }
